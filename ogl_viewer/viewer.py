@@ -304,9 +304,21 @@ class GLViewer:
         self.projection[(3,3)] = 0.
     
     def print_GL(self, _x, _y, _string):
-        glRasterPos(_x, _y)
+        # 使用窗口坐标而不是标准化设备坐标
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        glOrtho(0, glutGet(GLUT_WINDOW_WIDTH), 0, glutGet(GLUT_WINDOW_HEIGHT), -1, 1)
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+        glRasterPos(_x, glutGet(GLUT_WINDOW_HEIGHT) - _y)
         for i in range(len(_string)):
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ctypes.c_int(ord(_string[i])))
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix()
 
     def is_available(self):
         if self.available:
@@ -507,16 +519,58 @@ class GLViewer:
     def print_text(self):
         if self.available:
             # 显示相机位姿
-            glColor3f(0.15, 0.15, 0.15)
+            glColor3f(0.0, 1.0, 0.0)  # 荧绿色
             try:
-                # 简化位姿显示，只显示基本信息
-                # 显示跟踪状态（右上角）
-                self.print_GL(0.0, 0.9, "Tracking State: {}".format(str(self.tracking_state)))
-                # 显示提示信息
-                self.print_GL(0.0, 0.85, "Camera Pose: Available")
+                # 显示跟踪状态（左上角，使用像素坐标）
+                self.print_GL(10, 30, "Tracking State: {}".format(str(self.tracking_state)))
+                
+                # 从pose中获取位置和旋转信息
+                # 检查self.pose的类型和格式
+                try:
+                    # 检查pose是否有m属性（4x4矩阵）
+                    if hasattr(self.pose, 'm'):
+                        # 从4x4矩阵中获取位置信息
+                        x = self.pose.m[0, 3]
+                        y = self.pose.m[1, 3]
+                        z = self.pose.m[2, 3]
+                        
+                        # 从旋转矩阵计算欧拉角
+                        # 使用正确的旋转矩阵到欧拉角的转换
+                        rot_mat = self.pose.m
+                        
+                        # 计算欧拉角（弧度）
+                        sy = math.sqrt(rot_mat[0, 0] * rot_mat[0, 0] + rot_mat[1, 0] * rot_mat[1, 0])
+                        singular = sy < 1e-6
+                        
+                        if not singular:
+                            rx = math.atan2(rot_mat[2, 1], rot_mat[2, 2])
+                            ry = math.asin(-rot_mat[2, 0])
+                            rz = math.atan2(rot_mat[1, 0], rot_mat[0, 0])
+                        else:
+                            rx = math.atan2(-rot_mat[1, 2], rot_mat[1, 1])
+                            ry = math.asin(-rot_mat[2, 0])
+                            rz = 0
+                        
+                        # 将弧度转换为角度
+                        rx_deg = rx * 180 / M_PI
+                        ry_deg = ry * 180 / M_PI
+                        rz_deg = rz * 180 / M_PI
+                        
+                        # 在左上角显示详细的相机位姿，保留小数点后2位
+                        self.print_GL(10, 60, "Camera Pose:")
+                        self.print_GL(10, 90, "Position: x={:.2f}, y={:.2f}, z={:.2f}".format(x, y, z))
+                        self.print_GL(10, 120, "Rotation: rx={:.2f}, ry={:.2f}, rz={:.2f}".format(rx_deg, ry_deg, rz_deg))
+                    else:
+                        # 如果pose类型不正确，显示错误信息
+                        self.print_GL(10, 60, "Camera Pose: Unavailable")
+                except Exception as e:
+                    # 如果获取位姿失败，显示错误信息（左上角，使用像素坐标）
+                    self.print_GL(10, 30, "Tracking State: ERROR")
+                    self.print_GL(10, 60, "Failed to get camera pose: {}".format(str(e)))
             except Exception as e:
-                # 如果获取位姿失败，显示错误信息（右上角）
-                self.print_GL(0.0, 0.9, "Tracking State: ERROR")
+                # 如果获取位姿失败，显示错误信息（左上角，使用像素坐标）
+                self.print_GL(10, 30, "Tracking State: ERROR")
+                self.print_GL(10, 60, "Failed to get camera pose: {}".format(str(e)))
 
 class SubMapObj:
     def __init__(self):
