@@ -439,82 +439,82 @@ class GLViewer:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
                 
                 # Draw coordinate system after point cloud to avoid interference
-                self.draw_coordinate_system()
+                # self.draw_coordinate_system()  # Temporarily disabled due to issues
                     
-    def draw_coordinate_system(self):
-        """Draw coordinate system with origin at camera origin"""
-        if self.available and self.tracking_state == sl.POSITIONAL_TRACKING_STATE.OK:
-            try:
-                # Get projection matrix
-                tmp = self.pose
-                tmp.inverse()
-                proj = (self.projection * tmp).m
-                vpMat = proj.flatten()
-                
-                # Use a simple shader for coordinate system
-                glUseProgram(self.shader_image.get_program_id())
-                glUniformMatrix4fv(self.shader_MVP, 1, GL_TRUE, (GLfloat * len(vpMat))(*vpMat))
-                
-                # Set line width
-                glLineWidth(3.0)
-                
-                # Draw X axis (red)
-                glUniform3f(self.shader_color_loc, 1.0, 0.0, 0.0)  # Red
-                glBegin(GL_LINES)
-                # Origin to 1m
-                glVertex3f(0.0, 0.0, 0.0)
-                glVertex3f(1.0, 0.0, 0.0)
-                # Arrow head
-                glVertex3f(1.0, 0.0, 0.0)
-                glVertex3f(0.9, 0.05, 0.0)
-                glVertex3f(1.0, 0.0, 0.0)
-                glVertex3f(0.9, -0.05, 0.0)
-                glVertex3f(1.0, 0.0, 0.0)
-                glVertex3f(0.9, 0.0, 0.05)
-                glVertex3f(1.0, 0.0, 0.0)
-                glVertex3f(0.9, 0.0, -0.05)
-                glEnd()
-                
-                # Draw Y axis (green)
-                glUniform3f(self.shader_color_loc, 0.0, 1.0, 0.0)  # Green
-                glBegin(GL_LINES)
-                # Origin to 1m
-                glVertex3f(0.0, 0.0, 0.0)
-                glVertex3f(0.0, 1.0, 0.0)
-                # Arrow head
-                glVertex3f(0.0, 1.0, 0.0)
-                glVertex3f(0.05, 0.9, 0.0)
-                glVertex3f(0.0, 1.0, 0.0)
-                glVertex3f(-0.05, 0.9, 0.0)
-                glVertex3f(0.0, 1.0, 0.0)
-                glVertex3f(0.0, 0.9, 0.05)
-                glVertex3f(0.0, 1.0, 0.0)
-                glVertex3f(0.0, 0.9, -0.05)
-                glEnd()
-                
-                # Draw Z axis (blue)
-                glUniform3f(self.shader_color_loc, 0.0, 0.0, 1.0)  # Blue
-                glBegin(GL_LINES)
-                # Origin to 1m
-                glVertex3f(0.0, 0.0, 0.0)
-                glVertex3f(0.0, 0.0, 1.0)
-                # Arrow head
-                glVertex3f(0.0, 0.0, 1.0)
-                glVertex3f(0.05, 0.0, 0.9)
-                glVertex3f(0.0, 0.0, 1.0)
-                glVertex3f(-0.05, 0.0, 0.9)
-                glVertex3f(0.0, 0.0, 1.0)
-                glVertex3f(0.0, 0.05, 0.9)
-                glVertex3f(0.0, 0.0, 1.0)
-                glVertex3f(0.0, -0.05, 0.9)
-                glEnd()
-                
-                glUseProgram(0)
-                glLineWidth(1.0)
-            except Exception as e:
-                # Print error for debugging
-                print("Error drawing coordinate system:", str(e))
-                pass
+    # def draw_coordinate_system(self):
+    #     """Draw coordinate system with origin at camera origin"""
+    #     if self.available and self.tracking_state == sl.POSITIONAL_TRACKING_STATE.OK:
+    #         try:
+    #             # Get projection matrix
+    #             tmp = self.pose
+    #             tmp.inverse()
+    #             proj = (self.projection * tmp).m
+    #             vpMat = proj.flatten()
+    #             
+    #             # Use a simple shader for coordinate system
+    #             glUseProgram(self.shader_image.get_program_id())
+    #             glUniformMatrix4fv(self.shader_MVP, 1, GL_TRUE, (GLfloat * len(vpMat))(*vpMat))
+    #             
+    #             # Set line width
+    #             glLineWidth(3.0)
+    #             
+    #             # Draw X axis (red)
+    #             glUniform3f(self.shader_color_loc, 1.0, 0.0, 0.0)  # Red
+    #             glBegin(GL_LINES)
+    #             # Origin to 1m
+    #             glVertex3f(0.0, 0.0, 0.0)
+    #             glVertex3f(1.0, 0.0, 0.0)
+    #             # Arrow head
+    #             glVertex3f(1.0, 0.0, 0.0)
+    #             glVertex3f(0.9, 0.05, 0.0)
+    #             glVertex3f(1.0, 0.0, 0.0)
+    #             glVertex3f(0.9, -0.05, 0.0)
+    #             glVertex3f(1.0, 0.0, 0.0)
+    #             glVertex3f(0.9, 0.0, 0.05)
+    #             glVertex3f(1.0, 0.0, 0.0)
+    #             glVertex3f(0.9, 0.0, -0.05)
+    #             glEnd()
+    #             
+    #             # Draw Y axis (green)
+    #             glUniform3f(self.shader_color_loc, 0.0, 1.0, 0.0)  # Green
+    #             glBegin(GL_LINES)
+    #             # Origin to 1m
+    #             glVertex3f(0.0, 0.0, 0.0)
+    #             glVertex3f(0.0, 1.0, 0.0)
+    #             # Arrow head
+    #             glVertex3f(0.0, 1.0, 0.0)
+    #             glVertex3f(0.05, 0.9, 0.0)
+    #             glVertex3f(0.0, 1.0, 0.0)
+    #             glVertex3f(-0.05, 0.9, 0.0)
+    #             glVertex3f(0.0, 1.0, 0.0)
+    #             glVertex3f(0.0, 0.9, 0.05)
+    #             glVertex3f(0.0, 1.0, 0.0)
+    #             glVertex3f(0.0, 0.9, -0.05)
+    #             glEnd()
+    #             
+    #             # Draw Z axis (blue)
+    #             glUniform3f(self.shader_color_loc, 0.0, 0.0, 1.0)  # Blue
+    #             glBegin(GL_LINES)
+    #             # Origin to 1m
+    #             glVertex3f(0.0, 0.0, 0.0)
+    #             glVertex3f(0.0, 0.0, 1.0)
+    #             # Arrow head
+    #             glVertex3f(0.0, 0.0, 1.0)
+    #             glVertex3f(0.05, 0.0, 0.9)
+    #             glVertex3f(0.0, 0.0, 1.0)
+    #             glVertex3f(-0.05, 0.0, 0.9)
+    #             glVertex3f(0.0, 0.0, 1.0)
+    #             glVertex3f(0.0, 0.05, 0.9)
+    #             glVertex3f(0.0, 0.0, 1.0)
+    #             glVertex3f(0.0, -0.05, 0.9)
+    #             glEnd()
+    #             
+    #             glUseProgram(0)
+    #             glLineWidth(1.0)
+    #         except Exception as e:
+    #             # Print error for debugging
+    #             print("Error drawing coordinate system:", str(e))
+    #             pass
 
     def print_text(self):
         if self.available:

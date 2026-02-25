@@ -5,70 +5,6 @@ import ogl_viewer.viewer as gl
 import argparse
 
 
-def create_point_cloud_with_coordinate_system(input_ply, output_ply):
-    """Create a new PLY file with coordinate system by merging original point cloud and coordinate system points"""
-    try:
-        print(f"Creating coordinate system file: {output_ply}")
-        
-        # Read original point cloud file
-        with open(input_ply, 'r') as f:
-            original_lines = f.readlines()
-        
-        # Find the vertex count line
-        vertex_count = 0
-        header_end_index = 0
-        for i, line in enumerate(original_lines):
-            if line.startswith('element vertex'):
-                vertex_count = int(line.split()[2])
-            if line.startswith('end_header'):
-                header_end_index = i
-                break
-        
-        # Create coordinate system points
-        coord_points = []
-        
-        # X axis (red) - 10 points from (0,0,0) to (1,0,0)
-        for i in range(10):
-            x = i * 0.1
-            # RGB values: red (255,0,0)
-            coord_points.append(f'{x} 0.0 0.0 255 0 0\n')
-        
-        # Y axis (green) - 10 points from (0,0,0) to (0,1,0)
-        for i in range(10):
-            y = i * 0.1
-            # RGB values: green (0,255,0)
-            coord_points.append(f'0.0 {y} 0.0 0 255 0\n')
-        
-        # Z axis (blue) - 10 points from (0,0,0) to (0,0,1)
-        for i in range(10):
-            z = i * 0.1
-            # RGB values: blue (0,0,255)
-            coord_points.append(f'0.0 0.0 {z} 0 0 255\n')
-        
-        # Calculate new vertex count
-        new_vertex_count = vertex_count + len(coord_points)
-        
-        # Create new header with updated vertex count
-        new_header = []
-        for line in original_lines[:header_end_index]:
-            if line.startswith('element vertex'):
-                new_header.append(f'element vertex {new_vertex_count}\n')
-            else:
-                new_header.append(line)
-        new_header.append('end_header\n')
-        
-        # Write new PLY file with original points + coordinate system points
-        with open(output_ply, 'w') as f:
-            f.writelines(new_header)
-            f.writelines(original_lines[header_end_index+1:])
-            f.writelines(coord_points)
-        
-        print(f"Successfully created coordinate system file: {output_ply}")
-        print(f"Original points: {vertex_count}, Added coordinate points: {len(coord_points)}, Total points: {new_vertex_count}")
-        return True
-    except Exception as e:
-        print(f"Error creating coordinate system file: {str(e)}")
-        return False
 
 
 def main(high_quality=False):
@@ -184,9 +120,6 @@ def main(high_quality=False):
                 else:
                     print("Successfully extracted point cloud")
                     
-                    # 添加坐标系到点云
-                    print("Adding coordinate system to point cloud...")
-                    
                     # 尝试保存点云为PLY格式
                     point_cloud_ply_filepath = "point_cloud_gen.ply"
                     status = point_cloud.save(point_cloud_ply_filepath)
@@ -194,39 +127,10 @@ def main(high_quality=False):
                         print("Point cloud saved as PLY: " + point_cloud_ply_filepath)
                         # 检查文件是否存在且大小大于0
                         import os
-                        if os.path.exists(point_cloud_ply_filepath) and os.path.getsize(point_cloud_ply_filepath) > 0:
+                        if os.path.exists(point_cloud_ply_filepath):
                             print(f"Point cloud file size: {os.path.getsize(point_cloud_ply_filepath)} bytes")
-                            # 创建带坐标系的点云文件
-                            create_point_cloud_with_coordinate_system(point_cloud_ply_filepath, "point_cloud_with_coords.ply")
                         else:
-                            print(f"Warning: Point cloud file {point_cloud_ply_filepath} does not exist or is empty")
-                            # 尝试直接从point_cloud对象创建带坐标系的文件
-                            print("Attempting to create coordinate system directly from point cloud data...")
-                            # 创建一个简单的PLY文件，包含点云数据和坐标系
-                            with open("point_cloud_with_coords.ply", 'w') as f:
-                                # 写入PLY头
-                                f.write('ply\n')
-                                f.write('format ascii 1.0\n')
-                                # 假设点云有一些点，加上30个坐标系点
-                                f.write('element vertex 100\n')
-                                f.write('property float x\n')
-                                f.write('property float y\n')
-                                f.write('property float z\n')
-                                f.write('property uchar red\n')
-                                f.write('property uchar green\n')
-                                f.write('property uchar blue\n')
-                                f.write('end_header\n')
-                                # 写入一些示例点
-                                for i in range(70):
-                                    f.write(f'{i*0.1} {i*0.1} {i*0.1} 128 128 128\n')
-                                # 写入坐标系点
-                                for i in range(10):
-                                    f.write(f'{i*0.1} 0.0 0.0 255 0 0\n')
-                                for i in range(10):
-                                    f.write(f'0.0 {i*0.1} 0.0 0 255 0\n')
-                                for i in range(10):
-                                    f.write(f'0.0 0.0 {i*0.1} 0 0 255\n')
-                            print("Created sample point_cloud_with_coords.ply file")
+                            print(f"Warning: Point cloud file {point_cloud_ply_filepath} does not exist")
                     else:
                         print("Failed to save the point cloud as PLY")
                     
@@ -239,64 +143,6 @@ def main(high_quality=False):
                         import os
                         if os.path.exists(point_cloud_obj_filepath):
                             print(f"OBJ file size: {os.path.getsize(point_cloud_obj_filepath)} bytes")
-                            # 尝试从OBJ文件创建带坐标系的PLY文件
-                            print("Attempting to create coordinate system from OBJ file...")
-                            # 读取OBJ文件并转换为PLY格式，添加坐标系
-                            try:
-                                with open(point_cloud_obj_filepath, 'r') as f:
-                                    obj_lines = f.readlines()
-                                
-                                # 计算OBJ文件中的顶点数量
-                                vertex_count = 0
-                                vertices = []
-                                for line in obj_lines:
-                                    if line.startswith('v '):
-                                        vertex_count += 1
-                                        parts = line.strip().split()
-                                        if len(parts) >= 4:
-                                            vertices.append(f"{parts[1]} {parts[2]} {parts[3]} 128 128 128\n")
-                                
-                                # 创建带坐标系的PLY文件
-                                coord_points = []
-                                # X axis (red) - 10 points from (0,0,0) to (1,0,0)
-                                for i in range(10):
-                                    x = i * 0.1
-                                    coord_points.append(f'{x} 0.0 0.0 255 0 0\n')
-                                # Y axis (green) - 10 points from (0,0,0) to (0,1,0)
-                                for i in range(10):
-                                    y = i * 0.1
-                                    coord_points.append(f'0.0 {y} 0.0 0 255 0\n')
-                                # Z axis (blue) - 10 points from (0,0,0) to (0,0,1)
-                                for i in range(10):
-                                    z = i * 0.1
-                                    coord_points.append(f'0.0 0.0 {z} 0 0 255\n')
-                                
-                                # 计算总顶点数
-                                total_vertices = vertex_count + len(coord_points)
-                                
-                                # 写入PLY文件
-                                with open("point_cloud_with_coords.ply", 'w') as f:
-                                    f.write('ply\n')
-                                    f.write('format ascii 1.0\n')
-                                    f.write(f'element vertex {total_vertices}\n')
-                                    f.write('property float x\n')
-                                    f.write('property float y\n')
-                                    f.write('property float z\n')
-                                    f.write('property uchar red\n')
-                                    f.write('property uchar green\n')
-                                    f.write('property uchar blue\n')
-                                    f.write('end_header\n')
-                                    # 写入OBJ文件中的顶点
-                                    f.writelines(vertices)
-                                    # 写入坐标系点
-                                    f.writelines(coord_points)
-                                
-                                print(f"Successfully created point_cloud_with_coords.ply from OBJ file")
-                                print(f"Original vertices: {vertex_count}, Added coordinate points: {len(coord_points)}, Total vertices: {total_vertices}")
-                                import os
-                                print(f"New PLY file size: {os.path.getsize('point_cloud_with_coords.ply')} bytes")
-                            except Exception as e:
-                                print(f"Error creating PLY from OBJ: {str(e)}")
                         else:
                             print(f"Warning: OBJ file {point_cloud_obj_filepath} does not exist")
                     else:
