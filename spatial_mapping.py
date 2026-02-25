@@ -5,9 +5,8 @@ import ogl_viewer.viewer as gl
 import argparse
 
 
-
-
 def main(high_quality=False):
+    # 初始化参数设置
     init = sl.InitParameters()
     init.depth_mode = sl.DEPTH_MODE.NEURAL
     init.coordinate_units = sl.UNIT.METER
@@ -17,6 +16,8 @@ def main(high_quality=False):
     svo_path = "C:\\Users\\ZYF\\Documents\\ZED\\HD2K_SN36245620_15-16-49.svo2"
     init.set_from_svo_file(svo_path)
     print("[Sample] Using SVO File input: {0}".format(svo_path))
+
+    # 打开相机
     zed = sl.Camera()
     status = zed.open(init)
     if status > sl.ERROR_CODE.SUCCESS:
@@ -25,7 +26,8 @@ def main(high_quality=False):
     
     camera_infos = zed.get_camera_information()
     pose = sl.Pose()
-    
+
+    # 配置位置跟踪
     tracking_state = sl.POSITIONAL_TRACKING_STATE.OFF
     # 配置PositionalTrackingParameters
     positional_tracking_parameters = sl.PositionalTrackingParameters()
@@ -38,7 +40,8 @@ def main(high_quality=False):
     if returned_state != sl.ERROR_CODE.SUCCESS:
         print("Enable Positional Tracking : "+repr(status)+". Exit program.")
         exit()
-    
+
+    # 配置空间映射参数
     # 根据high_quality参数设置不同的映射参数
     if high_quality:
         print("[Sample] Using HIGH quality point cloud settings")
@@ -54,7 +57,6 @@ def main(high_quality=False):
     tracking_state = sl.POSITIONAL_TRACKING_STATE.OFF
     mapping_state = sl.SPATIAL_MAPPING_STATE.NOT_ENABLED
 
-    
     runtime_parameters = sl.RuntimeParameters()
     runtime_parameters.confidence_threshold = 50
     
@@ -72,7 +74,6 @@ def main(high_quality=False):
     # print("Disable the spatial mapping after enabling it will output a .obj mesh file")
     
     # 自动开始映射
-    
     init_pose = sl.Transform()
     zed.reset_positional_tracking(init_pose) 
 
@@ -102,7 +103,8 @@ def main(high_quality=False):
     last_call = time.time()
 
     mapping_activated = True
-    
+
+    # 主循环
     while viewer.is_available():
         # Grab an image, a RuntimeParameters object must be given to grab()
         grab_result = zed.grab(runtime_parameters)
@@ -148,8 +150,6 @@ def main(high_quality=False):
                     else:
                         print("Failed to save the point cloud as OBJ")
                 
-
-                
                 point_cloud.clear()
                 
                 mapping_state = sl.SPATIAL_MAPPING_STATE.NOT_ENABLED
@@ -176,7 +176,8 @@ def main(high_quality=False):
 
             # 调用update_view，但忽略返回值，因为我们不需要手动触发状态变化
             viewer.update_view(image, pose.pose_data(), tracking_state, mapping_state)
-    
+
+    # 清理资源
     # Disable modules and close camera
     zed.disable_spatial_mapping()
     zed.disable_positional_tracking()
@@ -188,8 +189,8 @@ def main(high_quality=False):
     # Close the ZED
     zed.close()
 
-
 if __name__ == "__main__":
+    # 命令行参数处理
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--high_quality', action='store_true', help='Enable high quality point cloud generation with higher resolution')
