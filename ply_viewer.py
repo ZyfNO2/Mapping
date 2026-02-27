@@ -1,35 +1,8 @@
 import open3d as o3d
 import numpy as np
-import threading
-import time
-
-# 全局变量用于存储鼠标位置和选中的点
-mouse_x = 0
-mouse_y = 0
-selected_point = None
-running = True
-
-# 模拟鼠标位置更新的线程
-def mouse_tracker():
-    global mouse_x, mouse_y, running
-    while running:
-        # 这里我们模拟鼠标位置更新
-        # 实际应用中，我们需要使用系统API来获取真实的鼠标位置
-        import pyautogui
-        try:
-            x, y = pyautogui.position()
-            # 转换为相对于窗口的坐标
-            # 这里假设窗口在屏幕左上角
-            mouse_x = x
-            mouse_y = y
-        except Exception as e:
-            pass
-        time.sleep(0.01)
 
 # 主函数
 def main():
-    global running
-    
     # 读取PLY文件
     ply_file = "point_cloud_gen.ply"
     print(f"Reading point cloud from {ply_file}...")
@@ -51,30 +24,46 @@ def main():
     # 打印使用说明
     print("\nPLY Viewer Instructions:")
     print("1. Use the mouse to navigate the point cloud")
-    print("2. Mouse over points to see their coordinates")
-    print("3. Close the window to exit")
+    print("2. Left-click to select points")
+    print("3. Selected points will be displayed in the console")
+    print("4. Close the window to exit")
     
     # 创建可视化窗口
     print("\nOpening PLY viewer...")
     
-    # 启动鼠标跟踪线程
-    tracker_thread = threading.Thread(target=mouse_tracker)
-    tracker_thread.daemon = True
-    tracker_thread.start()
+    # 使用VisualizerWithEditing类
+    # 这个类允许用户选择点并显示其坐标
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window(window_name="PLY Viewer with Selection", width=800, height=600)
+    vis.add_geometry(point_cloud)
     
-    # 使用draw_geometries函数
-    # 这个函数会打开一个窗口，显示点云
-    print("\nMouse over points to see their coordinates")
+    # 设置渲染选项
+    render_option = vis.get_render_option()
+    render_option.point_size = 2.0
+    
+    # 运行可视化
+    print("\nLeft-click to select points, right-click to cancel")
     print("Close the window when done")
     
     # 运行可视化
-    o3d.visualization.draw_geometries([point_cloud], window_name="PLY Viewer", width=800, height=600)
+    vis.run()
     
-    # 停止鼠标跟踪线程
-    running = False
-    tracker_thread.join(timeout=1.0)
+    # 获取选中的点
+    picked_points = vis.get_picked_points()
     
-    print("\n\nViewer closed")
+    # 销毁窗口
+    vis.destroy_window()
+    
+    # 打印选中点的坐标
+    if picked_points and len(picked_points) > 0:
+        print("\n\nSelected points:")
+        for i, point_idx in enumerate(picked_points):
+            point = np.asarray(point_cloud.points)[point_idx]
+            print(f"Point {i+1}: X: {point[0]:.3f}, Y: {point[1]:.3f}, Z: {point[2]:.3f}")
+    else:
+        print("\n\nNo points selected")
+    
+    print("Viewer closed")
 
 if __name__ == "__main__":
     main()
