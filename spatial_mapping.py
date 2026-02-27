@@ -149,6 +149,40 @@ def main(high_quality=False):
                             print(f"Warning: OBJ file {point_cloud_obj_filepath} does not exist")
                     else:
                         print("Failed to save the point cloud as OBJ")
+                    
+                    # 保存点云为CSV格式
+                    import numpy as np
+                    import csv
+                    
+                    try:
+                        # 获取顶点数据 [x, y, z, rgba]
+                        vertices = point_cloud.vertices()
+                        print(f"Extracted {vertices.shape[0]} points")
+                        
+                        # 创建CSV文件
+                        csv_filepath = "point_cloud_gen.csv"
+                        with open(csv_filepath, 'w', newline='') as csvfile:
+                            csv_writer = csv.writer(csvfile)
+                            # 写入表头
+                            csv_writer.writerow(['x', 'y', 'z', 'r', 'g', 'b'])
+                            
+                            # 处理每个点
+                            for point in vertices:
+                                x, y, z, rgba = point
+                                # 从rgba中提取rgb值（0-255）
+                                r = int((rgba >> 16) & 0xFF)
+                                g = int((rgba >> 8) & 0xFF)
+                                b = int(rgba & 0xFF)
+                                # 写入一行数据
+                                csv_writer.writerow([x, y, z, r, g, b])
+                        
+                        print(f"Point cloud saved as CSV: {csv_filepath}")
+                        if os.path.exists(csv_filepath):
+                            print(f"CSV file size: {os.path.getsize(csv_filepath)} bytes")
+                        else:
+                            print(f"Warning: CSV file {csv_filepath} does not exist")
+                    except Exception as e:
+                        print(f"Failed to save point cloud as CSV: {e}")
                 
                 point_cloud.clear()
                 

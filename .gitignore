@@ -3,6 +3,7 @@
 __pycache__/
 *.obj
 *.ply
+*.csv
 
 # IDE files
 .vscode/
