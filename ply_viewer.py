@@ -1,10 +1,29 @@
+"""
+文件目的：PLY点云文件可视化和交互工具
+
+处理流程：
+1. 读取PLY格式的点云文件
+2. 检查点云的基本属性（是否有颜色和法向量）
+3. 创建交互式可视化窗口
+4. 允许用户通过鼠标导航和选择点
+5. 显示用户选中的点坐标
+6. 关闭窗口时结束程序
+
+数据处理方式：
+- 使用Open3D的VisualizerWithEditing类创建交互式可视化
+- 读取PLY文件并显示点云
+- 捕获用户选择的点并输出其坐标
+"""
 import open3d as o3d
 import numpy as np
 
 # 主函数
 def main():
+    import os
+    # 确保data目录存在
+    os.makedirs('data', exist_ok=True)
     # 读取PLY文件
-    ply_file = "point_cloud_gen.ply"
+    ply_file = "data/point_cloud_gen.ply"
     print(f"Reading point cloud from {ply_file}...")
     point_cloud = o3d.io.read_point_cloud(ply_file)
     print(f"Point cloud has {len(point_cloud.points)} points")

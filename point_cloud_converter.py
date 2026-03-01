@@ -1,3 +1,17 @@
+"""
+文件目的：点云文件读取和格式转换工具
+
+处理流程：
+1. 尝试按顺序读取不同格式的点云文件（PLY → OBJ → CSV）
+2. 对不同格式的文件进行相应的解析和处理
+3. 预览点云数据
+4. 将点云保存为PCD格式
+
+数据处理方式：
+- PLY文件：直接使用Open3D读取
+- OBJ文件：读取网格并通过泊松圆盘采样转换为点云
+- CSV文件：根据不同的CSV格式解析点坐标和颜色信息，支持多种颜色存储格式
+"""
 import open3d as o3d
 import numpy as np
 import csv
@@ -105,10 +119,13 @@ def read_obj_point_cloud(obj_file):
 
 # 主函数
 def main():
-    obj_file = "point_cloud_gen.obj"
-    csv_file = "point_cloud_gen_argb.csv"
-    ply_file = "point_cloud_gen.ply"
-    pcd_file = "point_cloud_gen.pcd"
+    import os
+    # 确保data目录存在
+    os.makedirs('data', exist_ok=True)
+    obj_file = "data/point_cloud_gen.obj"
+    csv_file = "data/point_cloud_gen_argb.csv"
+    ply_file = "data/point_cloud_gen.ply"
+    pcd_file = "data/point_cloud_gen.pcd"
     
     try:
         # 尝试读取PLY文件

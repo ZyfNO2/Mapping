@@ -1,3 +1,20 @@
+"""
+文件目的：使用ZED相机进行空间映射和点云生成
+
+处理流程：
+1. 初始化ZED相机参数，使用SVO文件作为输入
+2. 配置位置跟踪和空间映射参数
+3. 启动空间映射过程
+4. 处理SVO文件中的每一帧
+5. 当SVO文件播放完成时，提取点云数据
+6. 保存点云数据为CSV和PLY格式
+
+数据处理方式：
+- 从SVO文件中读取深度信息
+- 使用ZED SDK的空间映射功能生成点云
+- 将点云数据保存为CSV格式（包含顶点坐标）
+- 将点云数据保存为PLY格式（包含颜色信息）
+"""
 import sys
 import time
 import pyzed.sl as sl
@@ -125,13 +142,16 @@ def main(high_quality=False):
                     # 保存vertices数据为CSV
                     import numpy as np
                     import csv
+                    import os
+                    # 确保data目录存在
+                    os.makedirs('data', exist_ok=True)
                     # 先更新vertices数据
                     point_cloud.update_from_chunklist()
                     vertices = point_cloud.vertices
                     # 提取xyz数据，忽略rgba
                     xyz_data = vertices[:, :3]
                     # 保存为CSV文件
-                    csv_filepath = "point_cloud_vertices.csv"
+                    csv_filepath = "data/point_cloud_vertices.csv"
                     with open(csv_filepath, 'w', newline='') as csvfile:
                         csv_writer = csv.writer(csvfile)
                         # 写入表头
@@ -141,7 +161,7 @@ def main(high_quality=False):
                     print(f"Vertices data saved as CSV: {csv_filepath}")
                     
                     # 保存点云为PLY格式
-                    point_cloud_ply_filepath = "point_cloud_gen.ply"
+                    point_cloud_ply_filepath = "data/point_cloud_gen.ply"
                     # 使用PLY格式保存
                     status = point_cloud.save(point_cloud_ply_filepath, sl.MESH_FILE_FORMAT.PLY)
                     if status:
