@@ -1,5 +1,5 @@
 """
-文件目的：离线从SVO文件生成高质量点云并保存为PLY格式
+离线从SVO文件生成高质量点云并保存为PLY格式
 
 处理流程：
 1. 初始化ZED相机参数，使用SVO文件作为输入
@@ -8,11 +8,6 @@
 4. 处理SVO文件中的每一帧
 5. 当SVO文件播放完成时，提取点云数据
 6. 保存点云数据为PLY格式
-
-数据处理方式：
-- 从SVO文件中读取深度信息
-- 使用ZED SDK的空间映射功能生成高质量点云
-- 将点云数据保存为PLY格式（包含颜色信息）
 """
 import sys
 import time
@@ -113,6 +108,39 @@ def main():
                             print(f"Warning: Point cloud file {point_cloud_ply_filepath} does not exist")
                     else:
                         print("Failed to save the point cloud as PLY")
+                    
+                    # 保存点云为CSV格式
+                    point_cloud_csv_filepath = "data/point_cloud_gen_high_quality.csv"
+                    print(f"Saving point cloud as CSV: {point_cloud_csv_filepath}")
+                    try:
+                        # 先保存为PLY文件，然后使用Open3D读取并保存为CSV
+                        import open3d as o3d
+                        import numpy as np
+                        # 读取PLY文件
+                        pcd = o3d.io.read_point_cloud(point_cloud_ply_filepath)
+                        # 提取点云数据
+                        points = np.asarray(pcd.points)
+                        # 提取法线数据
+                        normals = np.asarray(pcd.normals) if pcd.has_normals() else np.zeros((len(points), 3))
+                        # 提取颜色数据
+                        colors = np.asarray(pcd.colors) if pcd.has_colors() else np.zeros((len(points), 3))
+                        # 创建CSV文件
+                        with open(point_cloud_csv_filepath, 'w') as f:
+                            # 写入表头
+                            f.write("x,y,z,nx,ny,nz,r,g,b\n")
+                            # 写入点云数据
+                            for i, point in enumerate(points):
+                                nx, ny, nz = normals[i] if len(normals) > i else (0, 0, 0)
+                                r, g, b = colors[i] if len(colors) > i else (0, 0, 0)
+                                f.write(f"{point[0]},{point[1]},{point[2]},{nx},{ny},{nz},{r},{g},{b}\n")
+                        print(f"Point cloud saved as CSV: {point_cloud_csv_filepath}")
+                        # 检查文件是否存在且大小大于0
+                        if os.path.exists(point_cloud_csv_filepath):
+                            print(f"CSV file size: {os.path.getsize(point_cloud_csv_filepath)} bytes")
+                        else:
+                            print(f"Warning: CSV file {point_cloud_csv_filepath} does not exist")
+                    except Exception as e:
+                        print(f"Failed to save the point cloud as CSV: {e}")
                 
                 point_cloud.clear()
                 mapping_activated = False

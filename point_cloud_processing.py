@@ -1,7 +1,5 @@
 """
-文件目的：点云数据处理和优化工具
-
-处理流程：
+点云数据
 1. 加载点云文件
 2. 体素下采样减少点云数据量
 3. 统计滤波或半径滤波去除离群点
@@ -9,8 +7,6 @@
 5. 基于法线/曲率的异常点剔除
 6. 聚类分离并移除小碎片
 7. 保存处理后的点云
-
-数据处理方式：
 - 体素下采样：使用指定大小的体素网格对点云进行降采样
 - 滤波：根据统计特性或局部密度去除离群点
 - 法线估计：使用KDTree搜索近邻点计算法线
@@ -226,6 +222,36 @@ def main():
     # 保存处理后的点云
     print(f"Saving processed point cloud to {args.output_file}...")
     o3d.io.write_point_cloud(args.output_file, final_cloud)
+    
+    # 保存点云为CSV格式
+    csv_output_file = args.output_file.replace('.ply', '.csv')
+    print(f"Saving processed point cloud as CSV: {csv_output_file}...")
+    try:
+        # 提取点云数据
+        points = np.asarray(final_cloud.points)
+        # 提取法线数据
+        normals = np.asarray(final_cloud.normals) if final_cloud.has_normals() else np.zeros((len(points), 3))
+        # 提取颜色数据
+        colors = np.asarray(final_cloud.colors) if final_cloud.has_colors() else np.zeros((len(points), 3))
+        # 创建CSV文件
+        with open(csv_output_file, 'w') as f:
+            # 写入表头
+            f.write("x,y,z,nx,ny,nz,r,g,b\n")
+            # 写入点云数据
+            for i, point in enumerate(points):
+                nx, ny, nz = normals[i] if len(normals) > i else (0, 0, 0)
+                r, g, b = colors[i] if len(colors) > i else (0, 0, 0)
+                f.write(f"{point[0]},{point[1]},{point[2]},{nx},{ny},{nz},{r},{g},{b}\n")
+        print(f"Processed point cloud saved as CSV: {csv_output_file}")
+        # 检查文件是否存在且大小大于0
+        import os
+        if os.path.exists(csv_output_file):
+            print(f"CSV file size: {os.path.getsize(csv_output_file)} bytes")
+        else:
+            print(f"Warning: CSV file {csv_output_file} does not exist")
+    except Exception as e:
+        print(f"Failed to save the processed point cloud as CSV: {e}")
+    
     print("Processing completed successfully!")
 
 if __name__ == "__main__":
