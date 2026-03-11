@@ -60,20 +60,38 @@ Arguments:
   - `--ip_address` IP Address, in format a.b.c.d:port or a.b.c.d. If specified, the soft will try to connect to the IP.
   - `--resolution` Resolution, can be either HD2K, HD1200, HD1080, HD720, SVGA or VGA
 
-### Spatial Mapping (Offline)
+### Spatial Mapping (Offline) - Legacy
 To process an SVO file and generate high-quality point cloud:
 ```bash
 python spatial_mapping_offline.py
 ```
 This will:
 - Process the SVO file and generate a high-quality point cloud
-- Save the point cloud as PLY format: `data/point_cloud_gen_high_quality.ply`
-- Save the point cloud as CSV format: `data/point_cloud_gen_high_quality.csv` (includes xyz, normal, and rgb data)
+- Save the point cloud as PLY format: `data/<svo_name>/point_cloud_gen_high_quality.ply`
+
+### Universal SVO Processing (Recommended)
+To process any SVO file with a single command:
+```bash
+# Use default SVO file
+python process_svo_main.py
+
+# Process specific SVO file
+python process_svo_main.py --svo "path\to\your.svo2"
+
+# Process with custom output directory
+python process_svo_main.py --svo "your.svo2" --output "custom_folder"
+```
+
+This will:
+1. Generate high-quality point cloud from SVO
+2. Process point cloud (filtering, downsampling, normal estimation)
+3. Convert to multiple formats (PLY, CSV, OBJ)
+4. Save results to `data/<svo_name>/` directory
 
 ### First Frame Center Point Extraction
 To extract the first frame from an SVO file and find the 3D coordinates of the center point:
 ```bash
-python first_frame_center_point.py
+python first_frame_center_point_test.py
 ```
 This will:
 - Extract the first frame from the SVO file
@@ -84,7 +102,7 @@ This will:
 ### Point Cloud Processing
 To process the generated point cloud with filtering and clustering:
 ```bash
-python point_cloud_processing.py data/point_cloud_gen_high_quality.ply data/point_cloud_processed_no_downsample.ply
+python point_cloud_processing.py data/<svo_name>/point_cloud_gen_high_quality.ply data/<svo_name>/point_cloud_processed.ply
 ```
 Optional arguments:
   - `--density_radius` Search radius for density filtering (default: 0.06)
@@ -141,33 +159,64 @@ python -c "from ultralytics import YOLO; model = YOLO('yolo26n-seg.pt'); results
 - **Interactive Selection**: Box selection functionality in PLY viewer
 - **First Frame Analysis**: Extract and analyze the first frame from SVO files
 - **YOLO Segmentation**: Support for instance segmentation using YOLO models
+- **Universal SVO Processing**: Process any SVO file with a single command
+- **Multi-video Support**: Each SVO file gets its own output directory
 - **Final Mesh/Point Cloud**: Automatically saved after processing
 
 ## Output Files
-- `data/point_cloud_gen_high_quality.ply` - Raw high-quality point cloud
-- `data/point_cloud_gen_high_quality.csv` - Raw point cloud in CSV format (x,y,z,nx,ny,nz,r,g,b)
-- `data/point_cloud_processed_no_downsample.ply` - Processed point cloud
-- `data/point_cloud_processed_no_downsample.csv` - Processed point cloud in CSV format (x,y,z,nx,ny,nz,r,g,b)
-- `data/first_frame.jpg` - First frame extracted from SVO file
-- `data/first_frame_annotated.jpg` - Annotated first frame with center point
-- `data/seg_masks.json` - YOLO segmentation mask data
+Output files are organized by SVO filename:
+```
+data/
+├── <svo_name_1>/
+│   ├── point_cloud_gen_high_quality.ply    - Raw high-quality point cloud
+│   ├── point_cloud_gen_high_quality.obj    - Raw point cloud in OBJ format
+│   ├── point_cloud_processed.ply           - Processed point cloud
+│   ├── point_cloud.csv                     - Point cloud in CSV format (x,y,z,nx,ny,nz,r,g,b)
+│   └── point_cloud.obj                     - Final point cloud in OBJ format
+├── <svo_name_2>/
+│   └── ...
+└── ...
+```
 
 ## Project Structure
 ```
 python/
-├── spatial_mapping.py              # Real-time spatial mapping
-├── spatial_mapping_offline.py      # Offline SVO processing
-├── first_frame_center_point.py     # First frame extraction and center point analysis
-├── point_cloud_processing.py       # Point cloud filtering and clustering
-├── point_cloud_distance_analysis.py # Point cloud distance analysis
-├── point_cloud_converter.py        # Format conversion utility
-├── ply_viewer.py                   # Point cloud visualization
-├── requirements.txt                # Python dependencies
-├── yolo26n-seg.pt                  # YOLO segmentation model (auto-downloaded)
-├── ultralytics/                    # YOLO source code (cloned)
-├── crack-detection/                # Crack detection dataset
-└── data/                           # Output directory
+├── spatial_mapping.py                       # Real-time spatial mapping
+├── spatial_mapping_offline.py               # Offline SVO processing (legacy)
+├── process_svo_main.py                      # Universal SVO processing (recommended)
+├── first_frame_center_point_test.py         # First frame extraction and center point analysis
+├── point_cloud_processing.py                # Point cloud filtering and clustering
+├── point_cloud_distance_analysis.py         # Point cloud distance analysis
+├── point_cloud_converter.py                 # Format conversion utility
+├── ply_viewer.py                            # Point cloud visualization
+├── spatial_mapping_with_visualization_debug.py  # Debug visualization
+├── requirements.txt                         # Python dependencies
+├── utility_scripts/                         # Utility and tool scripts
+│   ├── temp/                               # Temporary scripts (not tracked by git)
+│   ├── check_data.py                       # Data checking utilities
+│   ├── check_gpu.py                        # GPU checking
+│   ├── find_models.py                      # Model file finder
+│   ├── organize_data.py                    # Data organization
+│   ├── prepare_crack_seg_data_fast.py      # Crack segmentation data preparation
+│   ├── svo_segmentation.py                 # SVO video segmentation
+│   ├── svo_segmentation_filtered.py        # Filtered SVO segmentation
+│   ├── train_cloud.py                      # Cloud training scripts
+│   ├── train_crack_seg.py                  # Crack segmentation training
+│   └── ...                                 # Other utility scripts
+├── yolo26n-seg.pt                          # YOLO segmentation model (auto-downloaded)
+├── ultralytics/                            # YOLO source code (cloned)
+├── crack-detection/                        # Crack detection dataset
+└── data/                                   # Output directory (organized by SVO)
 ```
+
+## Utility Scripts
+The `utility_scripts/` folder contains helper scripts for various tasks:
+- **Data Management**: `check_data.py`, `organize_data.py`
+- **GPU/Environment**: `check_gpu.py`
+- **Model Management**: `find_models.py`
+- **Segmentation**: `svo_segmentation.py`, `svo_segmentation_filtered.py`
+- **Training**: `train_cloud.py`, `train_crack_seg.py`
+- **Temp Scripts**: Place temporary scripts in `utility_scripts/temp/` (ignored by git)
 
 ## Support
 If you need assistance go to our Community site at https://community.stereolabs.com/
