@@ -12,3 +12,23 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Dataset files
+trainData/
+crack-detection/
+ultralytics/
+
+# Model files
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Output directories
+data/
+runs/
+crack_seg_runs/
+
+# Temporary files
+*.tmp
+*.log
