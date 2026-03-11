@@ -8,6 +8,7 @@ __pycache__/
 # IDE files
 .vscode/
 .idea/
+.trae/
 
 # OS files
 .DS_Store
@@ -32,3 +33,6 @@ crack_seg_runs/
 # Temporary files
 *.tmp
 *.log
+
+# Temp scripts folder
+utility_scripts/temp/
