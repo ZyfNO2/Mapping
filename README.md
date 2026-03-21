@@ -150,6 +150,56 @@ To test YOLO26n-seg segmentation model:
 python -c "from ultralytics import YOLO; model = YOLO('yolo26n-seg.pt'); results = model('image.jpg'); results[0].save('result.jpg')"
 ```
 
+### Damage Detection & Point Cloud Marking (V2)
+To detect damage in SVO files using YOLO segmentation and mark damage regions in point clouds:
+```bash
+# Process SVO with damage detection
+python svo_damage_detection_v2.py --svo "path\to\your.svo2"
+
+# Process with custom model
+python svo_damage_detection_v2.py --svo "path\to\your.svo2" --model "path\to\best.pt"
+
+# Adjust confidence threshold
+python svo_damage_detection_v2.py --svo "path\to\your.svo2" --conf 0.2
+
+# Visualize results after processing
+python svo_damage_detection_v2.py --svo "path\to\your.svo2" --visualize
+```
+
+This will:
+- Detect damage regions in each frame using YOLO segmentation
+- Extract 3D point cloud data for damage regions (world coordinates)
+- Generate multiple output files:
+  - `{svo_name}_original.ply`: Raw original point cloud (no marking)
+  - `{svo_name}_original_processed.ply`: Processed original point cloud (no damage marking)
+  - `{svo_name}_marked.ply`: Point cloud with red damage markers (unprocessed)
+  - `{svo_name}_marked_processed.ply`: Marked point cloud with post-processing
+  - `{svo_name}_damage_only.ply`: Damage region points only
+- Save detection images with overlay masks
+
+### Damage Surface Area Calculation
+To calculate the surface area of damage regions from point cloud data:
+```bash
+# Calculate with default parameters
+python calculate_damage_area.py
+
+# Use custom damage_only.ply file
+python calculate_damage_area.py --ply "path\to\damage_only.ply"
+
+# Adjust reconstruction parameters
+python calculate_damage_area.py --voxel-size 0.005 --radius 0.03
+
+# Visualize reconstructed surface
+python calculate_damage_area.py --visualize
+```
+
+This will:
+- Read damage_only.ply point cloud
+- Downsample for efficient processing
+- Reconstruct surface using Ball Pivoting algorithm
+- Calculate total surface area in m² and cm²
+- Output triangle count and bounding box information
+
 ## Features
 - **Real-time Mapping**: Press 'Spacebar' to start/stop the mapping process
 - **Real-time Overlay**: Mesh overlay on the image
@@ -162,6 +212,8 @@ python -c "from ultralytics import YOLO; model = YOLO('yolo26n-seg.pt'); results
 - **Universal SVO Processing**: Process any SVO file with a single command
 - **Multi-video Support**: Each SVO file gets its own output directory
 - **Final Mesh/Point Cloud**: Automatically saved after processing
+- **Damage Detection V2**: YOLO-based damage detection with point cloud marking
+- **Surface Area Calculation**: Compute damage surface area from point cloud data
 
 ## Output Files
 Output files are organized by SVO filename:
@@ -189,6 +241,8 @@ python/
 ├── point_cloud_distance_analysis.py         # Point cloud distance analysis
 ├── point_cloud_converter.py                 # Format conversion utility
 ├── ply_viewer.py                            # Point cloud visualization
+├── svo_damage_detection_v2.py               # Damage detection and point cloud marking (V2)
+├── calculate_damage_area.py                 # Damage surface area calculation
 ├── spatial_mapping_with_visualization_debug.py  # Debug visualization
 ├── requirements.txt                         # Python dependencies
 ├── utility_scripts/                         # Utility and tool scripts
