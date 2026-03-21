@@ -2,7 +2,6 @@
 """
 SVO损伤检测与点云标记一体化脚本 V2
 
-改进功能：
 1. 对marked和original点云进行后处理（密度过滤、统计滤波、法线估计、曲率过滤、聚类）
 2. damage_only点云不进行后处理
 3. 可视化时点云水平放置（通过旋转矩阵调整视角）
@@ -12,8 +11,6 @@ SVO损伤检测与点云标记一体化脚本 V2
    - {svo_name}_marked.ply: 带红色标记的完整点云（未处理）
    - {svo_name}_marked_processed.ply: 带标记点云（处理后）
    - {svo_name}_damage_only.ply: 仅包含损伤区域的点云（不处理）
-
-使用方法：
     python svo_damage_detection_v2.py --svo "path/to/your.svo2"
     python svo_damage_detection_v2.py --svo "path/to/your.svo2" --model "path/to/best.pt"
     python svo_damage_detection_v2.py --svo "path/to/your.svo2" --visualize  # 可视化结果
@@ -660,9 +657,9 @@ def process_svo_with_damage_detection_v2(
         if len(all_damage_points) > 0:
             damage_points_np = np.array(all_damage_points)
             
-            # 创建颜色数组
+            # 创建颜色数组（深拷贝，避免修改原始点云）
             if pcd.has_colors():
-                original_colors = np.asarray(pcd.colors)
+                original_colors = np.asarray(pcd.colors).copy()
             else:
                 original_colors = np.ones((len(original_points), 3)) * 0.7
             
