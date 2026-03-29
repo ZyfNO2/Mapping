@@ -1,276 +1,215 @@
-# ZED SDK - Spatial Mapping
+# ZED SDK - SVO Damage Detection V2
 
-This sample shows how to map your environment and process point cloud data, with additional support for YOLO-based image segmentation.
+基于ZED SDK和YOLO分割模型的SVO文件损伤检测与点云标记系统。
 
-## Getting Started
+## 功能特性
 
-### Prerequisites
-- Get the latest [ZED SDK](https://www.stereolabs.com/developers/release/) and [pyZED Package](https://www.stereolabs.com/docs/app-development/python/install/)
-- Install [Open3D](http://www.open3d.org/) for point cloud processing and visualization
-- Check the [Documentation](https://www.stereolabs.com/docs/)
+- **损伤检测**: 使用YOLO分割模型自动检测视频帧中的损伤区域
+- **3D点云标记**: 将2D检测结果映射到3D点云，标记损伤位置
+- **多输出格式**: 生成原始点云、标记点云、仅损伤区域点云等多种输出
+- **点云后处理**: 密度过滤、统计滤波、法线估计、曲率过滤、聚类
+- **损伤面积计算**: 基于Ball Pivoting算法计算损伤区域表面积
 
-## Deployment Steps
+## 部署步骤
 
-### 1. Clone the Repository
+### 1. 克隆仓库
 ```bash
 git clone <repository-url>
 cd python
 ```
 
-### 2. Create Python Environment
+### 2. 创建Python环境
 ```bash
-# Using conda (recommended)
+# 使用conda（推荐）
 conda create -n zed python=3.10
 conda activate zed
 
-# Or using venv
+# 或使用venv
 python -m venv venv
 # Windows: venv\Scripts\activate
 # Linux/Mac: source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 3. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Install ZED SDK Python API
-Follow the [official guide](https://www.stereolabs.com/docs/app-development/python/install/) to install pyzed.
+依赖包包括：
+- `pyzed` - ZED SDK Python API
+- `open3d` - 点云处理和可视化
+- `ultralytics` - YOLO模型
+- `opencv-python` - 图像处理
+- `numpy`, `scipy`, `pandas` - 数值计算
 
-### 5. Download YOLO Model (Optional)
-For segmentation features, download the YOLO model:
+### 4. 安装ZED SDK Python API
+按照[官方指南](https://www.stereolabs.com/docs/app-development/python/install/)安装pyzed。
+
+### 5. 准备YOLO模型
+下载或训练YOLO分割模型，默认使用`seg.pt`：
 ```bash
-python -c "from ultralytics import YOLO; YOLO('yolo26n-seg.pt')"
+# 将模型文件放在项目根目录
+# 或使用自定义路径
 ```
 
-## Run the program
+## 使用方法
 
-### Spatial Mapping (Real-time)
-To run the program with real-time camera input:
+### 基础使用
+
+处理SVO文件并进行损伤检测：
 ```bash
-python spatial_mapping.py
-```
-
-If you wish to run the program from an input_svo_file, or an IP address, or specify a resolution:
-```bash
-python spatial_mapping.py --input_svo_file <input_svo_file> --ip_address <ip_address> --resolution <resolution>
-```
-Arguments:
-  - `--input_svo_file` A path to an existing .svo file, that will be playbacked. If this parameter and ip_address are not specified, the soft will use the camera wired as default.
-  - `--ip_address` IP Address, in format a.b.c.d:port or a.b.c.d. If specified, the soft will try to connect to the IP.
-  - `--resolution` Resolution, can be either HD2K, HD1200, HD1080, HD720, SVGA or VGA
-
-### Spatial Mapping (Offline) - Legacy
-To process an SVO file and generate high-quality point cloud:
-```bash
-python spatial_mapping_offline.py
-```
-This will:
-- Process the SVO file and generate a high-quality point cloud
-- Save the point cloud as PLY format: `data/<svo_name>/point_cloud_gen_high_quality.ply`
-
-### Universal SVO Processing (Recommended)
-To process any SVO file with a single command:
-```bash
-# Use default SVO file
-python process_svo_main.py
-
-# Process specific SVO file
-python process_svo_main.py --svo "path\to\your.svo2"
-
-# Process with custom output directory
-python process_svo_main.py --svo "your.svo2" --output "custom_folder"
-```
-
-This will:
-1. Generate high-quality point cloud from SVO
-2. Process point cloud (filtering, downsampling, normal estimation)
-3. Convert to multiple formats (PLY, CSV, OBJ)
-4. Save results to `data/<svo_name>/` directory
-
-### First Frame Center Point Extraction
-To extract the first frame from an SVO file and find the 3D coordinates of the center point:
-```bash
-python first_frame_center_point_test.py
-```
-This will:
-- Extract the first frame from the SVO file
-- Calculate the 3D coordinates of the center point
-- Save the annotated first frame image
-- Visualize the point cloud with a magenta sphere at the center coordinate
-
-### Point Cloud Processing
-To process the generated point cloud with filtering and clustering:
-```bash
-python point_cloud_processing.py data/<svo_name>/point_cloud_gen_high_quality.ply data/<svo_name>/point_cloud_processed.ply
-```
-Optional arguments:
-  - `--density_radius` Search radius for density filtering (default: 0.06)
-  - `--min_density` Minimum local density for density filtering (default: 10)
-  - `--filter_type` Filter type: statistical or radius (default: statistical)
-  - `--nb_neighbors` Number of neighbors for statistical filter (default: 20)
-  - `--std_ratio` Standard deviation ratio for statistical filter (default: 2.0)
-  - `--visualize` Visualize the point cloud at each step
-
-This will:
-- Apply density filtering to remove discrete points
-- Perform statistical or radius outlier removal
-- Estimate normals for each point
-- Remove outliers based on curvature
-- Cluster and remove small fragments
-- Save the processed point cloud as PLY format
-- Save the processed point cloud as CSV format (includes xyz, normal, and rgb data)
-
-### Point Cloud Distance Analysis
-To analyze distances in the point cloud:
-```bash
-python point_cloud_distance_analysis.py
-```
-
-### PLY Viewer
-To visualize point cloud files with grid analysis and selection:
-```bash
-python ply_viewer.py
-```
-Features:
-- 3x3 grid layout analysis showing point distribution
-- Displays point count and first point coordinates for each grid cell
-- Interactive point selection with mouse
-- Supports both PLY and CSV formats
-
-### Point Cloud Converter
-To convert between different point cloud formats:
-```bash
-python point_cloud_converter.py <input_file> <output_file>
-```
-
-### YOLO Segmentation Test
-To test YOLO26n-seg segmentation model:
-```bash
-python -c "from ultralytics import YOLO; model = YOLO('yolo26n-seg.pt'); results = model('image.jpg'); results[0].save('result.jpg')"
-```
-
-### Damage Detection & Point Cloud Marking (V2)
-To detect damage in SVO files using YOLO segmentation and mark damage regions in point clouds:
-```bash
-# Process SVO with damage detection
 python svo_damage_detection_v2.py --svo "path\to\your.svo2"
+```
 
-# Process with custom model
+### 高级选项
+
+```bash
+# 使用自定义模型
 python svo_damage_detection_v2.py --svo "path\to\your.svo2" --model "path\to\best.pt"
 
-# Adjust confidence threshold
+# 调整置信度阈值（默认0.15）
 python svo_damage_detection_v2.py --svo "path\to\your.svo2" --conf 0.2
 
-# Visualize results after processing
+# 保存检测图像
+python svo_damage_detection_v2.py --svo "path\to\your.svo2" --save-images
+
+# 可视化结果
 python svo_damage_detection_v2.py --svo "path\to\your.svo2" --visualize
 ```
 
-This will:
-- Detect damage regions in each frame using YOLO segmentation
-- Extract 3D point cloud data for damage regions (world coordinates)
-- Generate multiple output files:
-  - `{svo_name}_original.ply`: Raw original point cloud (no marking)
-  - `{svo_name}_original_processed.ply`: Processed original point cloud (no damage marking)
-  - `{svo_name}_marked.ply`: Point cloud with red damage markers (unprocessed)
-  - `{svo_name}_marked_processed.ply`: Marked point cloud with post-processing
-  - `{svo_name}_damage_only.ply`: Damage region points only
-- Save detection images with overlay masks
+### 计算损伤面积
 
-### Damage Surface Area Calculation
-To calculate the surface area of damage regions from point cloud data:
 ```bash
-# Calculate with default parameters
+# 使用默认参数计算
 python calculate_damage_area.py
 
-# Use custom damage_only.ply file
+# 指定damage_only.ply文件
 python calculate_damage_area.py --ply "path\to\damage_only.ply"
 
-# Adjust reconstruction parameters
+# 调整重建参数
 python calculate_damage_area.py --voxel-size 0.005 --radius 0.03
 
-# Visualize reconstructed surface
+# 可视化重建表面
 python calculate_damage_area.py --visualize
 ```
 
-This will:
-- Read damage_only.ply point cloud
-- Downsample for efficient processing
-- Reconstruct surface using Ball Pivoting algorithm
-- Calculate total surface area in m² and cm²
-- Output triangle count and bounding box information
+## 输出文件说明
 
-## Features
-- **Real-time Mapping**: Press 'Spacebar' to start/stop the mapping process
-- **Real-time Overlay**: Mesh overlay on the image
-- **Textures and Post-filters**: Can be applied to the mesh
-- **CSV Export**: Point clouds are exported with xyz coordinates, normal vectors, and RGB colors
-- **Grid Analysis**: 3x3 grid layout for analyzing point distribution
-- **Interactive Selection**: Box selection functionality in PLY viewer
-- **First Frame Analysis**: Extract and analyze the first frame from SVO files
-- **YOLO Segmentation**: Support for instance segmentation using YOLO models
-- **Universal SVO Processing**: Process any SVO file with a single command
-- **Multi-video Support**: Each SVO file gets its own output directory
-- **Final Mesh/Point Cloud**: Automatically saved after processing
-- **Damage Detection V2**: YOLO-based damage detection with point cloud marking
-- **Surface Area Calculation**: Compute damage surface area from point cloud data
+运行`svo_damage_detection_v2.py`后，会在`data/damage_detection/<svo_name>/`目录下生成以下文件：
 
-## Output Files
-Output files are organized by SVO filename:
+| 文件名 | 说明 |
+|--------|------|
+| `{svo_name}_original.ply` | 原始重建点云（无标记，未处理） |
+| `{svo_name}_original_processed.ply` | 原始点云（经过后处理） |
+| `{svo_name}_marked.ply` | 带红色标记的完整点云（未处理） |
+| `{svo_name}_marked_processed.ply` | 带标记点云（经过后处理） |
+| `{svo_name}_damage_only.ply` | 仅包含损伤区域的点云（不处理） |
+| `detection_images/` | 检测图像（如启用--save-images） |
+
+## 技术架构
+
+### 数据流流程
+
 ```
-data/
-├── <svo_name_1>/
-│   ├── point_cloud_gen_high_quality.ply    - Raw high-quality point cloud
-│   ├── point_cloud_gen_high_quality.obj    - Raw point cloud in OBJ format
-│   ├── point_cloud_processed.ply           - Processed point cloud
-│   ├── point_cloud.csv                     - Point cloud in CSV format (x,y,z,nx,ny,nz,r,g,b)
-│   └── point_cloud.obj                     - Final point cloud in OBJ format
-├── <svo_name_2>/
-│   └── ...
-└── ...
+SVO文件输入
+    ↓
+ZED SDK读取帧
+    ↓
+YOLO分割检测 → 生成Mask
+    ↓
+提取3D点云（Camera坐标系）
+    ↓
+位姿变换 → World坐标系
+    ↓
+融合多帧损伤点
+    ↓
+提取完整点云（FusedPointCloud）
+    ↓
+标记损伤区域（红色）
+    ↓
+后处理（过滤、下采样、法线估计）
+    ↓
+多格式输出（PLY）
 ```
 
-## Project Structure
+### 核心API
+
+- `sl.Camera()` - ZED相机/SVO文件接口
+- `sl.FusedPointCloud()` - 融合点云容器
+- `zed.extract_whole_spatial_map()` - 提取完整空间映射
+- `zed.retrieve_measure()` - 获取逐帧点云数据
+- `YOLO()` - 损伤检测模型
+- `o3d.geometry.PointCloud()` - Open3D点云处理
+
+## 参数配置
+
+### 检测参数
+
+在`svo_damage_detection_v2.py`中可修改：
+
+```python
+CONF_THRESHOLD = 0.15          # 检测置信度阈值
+MARK_COLOR = [1.0, 0.0, 0.0]   # 标记颜色（红色）
+sample_step = 5                # 点云采样步长
+threshold = 0.05               # 损伤点匹配阈值（米）
+```
+
+### 后处理参数
+
+```python
+# 密度过滤
+density_radius = 0.06          # 搜索半径
+min_density = 10               # 最小局部密度
+
+# 统计滤波
+nb_neighbors = 20              # 邻居点数
+std_ratio = 2.0                # 标准差比率
+
+# 体素下采样
+voxel_size = 0.01              # 体素大小（米）
+
+# 法线估计
+radius = 0.1                   # 搜索半径
+max_nn = 30                    # 最大邻居数
+```
+
+### 面积计算参数
+
+```python
+voxel_size = 0.01              # 下采样体素大小
+ball_pivoting_search_radius = 0.05  # Ball Pivoting搜索半径
+```
+
+## 注意事项
+
+1. **内存管理**: 大型SVO文件可能占用大量内存，建议设置`max_memory_usage`参数
+2. **坐标系**: 输出点云使用世界坐标系（World Coordinate System）
+3. **深度质量**: 使用`DEPTH_MODE.NEURAL`获得最佳深度估计质量
+4. **GPU需求**: YOLO检测和深度估计需要NVIDIA GPU支持
+5. **模型路径**: 确保YOLO模型路径正确，默认使用`seg.pt`
+
+## 文件结构
+
 ```
 python/
-├── spatial_mapping.py                       # Real-time spatial mapping
-├── spatial_mapping_offline.py               # Offline SVO processing (legacy)
-├── process_svo_main.py                      # Universal SVO processing (recommended)
-├── first_frame_center_point_test.py         # First frame extraction and center point analysis
-├── point_cloud_processing.py                # Point cloud filtering and clustering
-├── point_cloud_distance_analysis.py         # Point cloud distance analysis
-├── point_cloud_converter.py                 # Format conversion utility
-├── ply_viewer.py                            # Point cloud visualization
-├── svo_damage_detection_v2.py               # Damage detection and point cloud marking (V2)
-├── calculate_damage_area.py                 # Damage surface area calculation
-├── spatial_mapping_with_visualization_debug.py  # Debug visualization
-├── requirements.txt                         # Python dependencies
-├── utility_scripts/                         # Utility and tool scripts
-│   ├── temp/                               # Temporary scripts (not tracked by git)
-│   ├── check_data.py                       # Data checking utilities
-│   ├── check_gpu.py                        # GPU checking
-│   ├── find_models.py                      # Model file finder
-│   ├── organize_data.py                    # Data organization
-│   ├── prepare_crack_seg_data_fast.py      # Crack segmentation data preparation
-│   ├── svo_segmentation.py                 # SVO video segmentation
-│   ├── svo_segmentation_filtered.py        # Filtered SVO segmentation
-│   ├── train_cloud.py                      # Cloud training scripts
-│   ├── train_crack_seg.py                  # Crack segmentation training
-│   └── ...                                 # Other utility scripts
-├── yolo26n-seg.pt                          # YOLO segmentation model (auto-downloaded)
-├── ultralytics/                            # YOLO source code (cloned)
-├── crack-detection/                        # Crack detection dataset
-└── data/                                   # Output directory (organized by SVO)
+├── svo_damage_detection_v2.py    # 主程序：损伤检测与点云标记
+├── calculate_damage_area.py      # 损伤面积计算
+├── seg.pt                        # YOLO分割模型（需自行准备）
+├── requirements.txt              # Python依赖
+├── README.md                     # 本文件
+└── data/
+    └── damage_detection/         # 输出目录
+        └── <svo_name>/
+            ├── *_original.ply
+            ├── *_marked.ply
+            ├── *_damage_only.ply
+            └── ...
 ```
 
-## Utility Scripts
-The `utility_scripts/` folder contains helper scripts for various tasks:
-- **Data Management**: `check_data.py`, `organize_data.py`
-- **GPU/Environment**: `check_gpu.py`
-- **Model Management**: `find_models.py`
-- **Segmentation**: `svo_segmentation.py`, `svo_segmentation_filtered.py`
-- **Training**: `train_cloud.py`, `train_crack_seg.py`
-- **Temp Scripts**: Place temporary scripts in `utility_scripts/temp/` (ignored by git)
+## 许可证
 
-## Support
-If you need assistance go to our Community site at https://community.stereolabs.com/
+本项目基于ZED SDK开发，遵循相应许可证协议。
+
+---
+
+*最后更新: 2026-03-29*
