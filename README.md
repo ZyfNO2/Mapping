@@ -188,22 +188,67 @@ ball_pivoting_search_radius = 0.05  # Ball Pivoting搜索半径
 4. **GPU需求**: YOLO检测和深度估计需要NVIDIA GPU支持
 5. **模型路径**: 确保YOLO模型路径正确，默认使用`seg.pt`
 
+## 文件夹结构规则
+
+### 目录组织
+
+| 目录 | 用途 | 内容 |
+|:---|:---|:---|
+| `/` (根目录) | 核心功能代码 | 三维重建、损伤检测、量化相关的Python文件 |
+| `docs/` | 文档资料 | Markdown文档、PDF论文、技术文档等 |
+| `utility_scripts/` | 辅助工具 | 测试脚本、批处理工具、论文生成工具等 |
+| `data/` | 输出数据 | 点云文件、检测结果等（已在.gitignore中） |
+| `datasets/` | 数据集 | 训练数据、测试数据（已在.gitignore中） |
+
+### 文件分类规则
+
+**核心功能文件（根目录）**：
+- `svo_damage_detection_v2.py` - 损伤检测与点云标记主程序
+- `process_svo_main.py` - SVO文件处理主程序
+- `spatial_mapping_offline.py` - 空间映射离线处理
+- `point_cloud_processing.py` - 点云处理模块
+- `point_cloud_converter.py` - 点云格式转换
+- `calculate_damage_area.py` - 损伤面积计算
+
+**辅助工具文件（utility_scripts/）**：
+- 测试脚本：`test_*.py`
+- 批处理工具：`batch_*.py`
+- 论文生成工具：`paper_*.py`
+- 旧版本代码：`svo_damage_detection.py`（v1）
+
+**文档文件（docs/）**：
+- Markdown文档：除README.md外的所有.md文件
+- PDF论文：所有.pdf文件
+- 技术文档、翻译文档等
+
 ## 文件结构
 
 ```
 python/
 ├── svo_damage_detection_v2.py    # 主程序：损伤检测与点云标记
+├── process_svo_main.py           # SVO处理主程序
+├── spatial_mapping_offline.py    # 空间映射离线处理
+├── point_cloud_processing.py     # 点云处理模块
+├── point_cloud_converter.py      # 点云格式转换
 ├── calculate_damage_area.py      # 损伤面积计算
 ├── seg.pt                        # YOLO分割模型（需自行准备）
 ├── requirements.txt              # Python依赖
 ├── README.md                     # 本文件
-└── data/
-    └── damage_detection/         # 输出目录
-        └── <svo_name>/
-            ├── *_original.ply
-            ├── *_marked.ply
-            ├── *_damage_only.ply
-            └── ...
+├── docs/                         # 文档资料
+│   ├── *.md                      # Markdown文档
+│   └── *.pdf                     # PDF论文
+├── utility_scripts/              # 辅助工具
+│   ├── test_*.py                 # 测试脚本
+│   ├── batch_*.py                # 批处理工具
+│   └── paper_*.py                # 论文生成工具
+├── data/                         # 输出目录（.gitignore）
+│   └── damage_detection/
+│       └── <svo_name>/
+│           ├── *_original.ply
+│           ├── *_marked.ply
+│           ├── *_damage_only.ply
+│           └── ...
+└── datasets/                     # 数据集（.gitignore）
 ```
 
 ## 许可证
@@ -212,4 +257,4 @@ python/
 
 ---
 
-*最后更新: 2026-03-29*
+*最后更新: 2026-04-04*

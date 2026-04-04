@@ -35,4 +35,7 @@ crack_seg_runs/
 *.log
 
 # Temp scripts folder
-utility_scripts/temp/
+utility_scripts/
+
+# Documentation
+docs/
