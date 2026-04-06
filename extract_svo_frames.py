@@ -3,6 +3,7 @@
 # 
 # 功能：
 # - 逐帧提取SVO文件中的左右目图像
+# - 提取每帧的深度图
 # - 提取每帧的位姿信息（位置和姿态）
 # - 提取相机参数
 # - 保存为结构化数据
@@ -162,6 +163,7 @@ Examples:
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(output_dir, "left")).mkdir(exist_ok=True)
     Path(os.path.join(output_dir, "right")).mkdir(exist_ok=True)
+    Path(os.path.join(output_dir, "depth")).mkdir(exist_ok=True)
     Path(os.path.join(output_dir, "pose")).mkdir(exist_ok=True)
     
     print("="*70)
@@ -209,6 +211,7 @@ Examples:
     # 准备数据容器
     left_image = sl.Mat()
     right_image = sl.Mat()
+    depth_image = sl.Mat()
     pose = sl.Pose()
     runtime_parameters = sl.RuntimeParameters()
     runtime_parameters.confidence_threshold = 50
@@ -254,6 +257,11 @@ Examples:
         pose_output_path = os.path.join(output_dir, "pose", f"frame_{extracted_count:06d}.json")
         save_pose(pose, pose_output_path)
         
+        # 提取深度图
+        zed.retrieve_image(depth_image, sl.VIEW.DEPTH)
+        depth_output_path = os.path.join(output_dir, "depth", f"frame_{extracted_count:06d}.png")
+        save_image(depth_image, depth_output_path)
+        
         # 显示进度
         if extracted_count % 10 == 0:
             print(f"Extracted frame {extracted_count}")
@@ -273,6 +281,7 @@ Examples:
     print("\nExtracted data:")
     print(f"  left/          - Left camera images")
     print(f"  right/         - Right camera images")
+    print(f"  depth/         - Depth images")
     print(f"  pose/          - Pose information (JSON)")
     print(f"  camera_parameters.json - Camera calibration data")
     print("="*70)
