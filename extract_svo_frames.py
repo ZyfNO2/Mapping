@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-SVO文件逐帧数据提取脚本
-
-功能：
-- 逐帧提取SVO文件中的左右目图像
-- 提取每帧的位姿信息（位置和姿态）
-- 提取相机参数
-- 保存为结构化数据
-
-使用方法：
-    python extract_svo_frames.py --svo path/to/your.svo2
-    python extract_svo_frames.py --svo path/to/your.svo2 --output custom_output
-    python extract_svo_frames.py --svo path/to/your.svo2 --output custom_output --skip 5
-"""
+# SVO文件逐帧数据提取脚本
+# 
+# 功能：
+# - 逐帧提取SVO文件中的左右目图像
+# - 提取每帧的位姿信息（位置和姿态）
+# - 提取相机参数
+# - 保存为结构化数据
+# 
+# 使用方法：
+#     python extract_svo_frames.py --svo path/to/your.svo2
+#     python extract_svo_frames.py --svo path/to/your.svo2 --output custom_output
+#     python extract_svo_frames.py --svo path/to/your.svo2 --output custom_output --skip 5
 import sys
 import time
 import argparse
